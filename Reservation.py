@@ -5,11 +5,11 @@ import time
 import threading
 from tkinter import messagebox
 import pymysql
-
+import tkinter.font
 
 MNGTITLE="관리자 페이지"
 
-#-------------------- 수업조회 페이지 --------------------
+#-------------------- 메인 --------------------
 class MainClass(Tk):
     def __init__(self):
         Tk.__init__(self)
@@ -26,25 +26,28 @@ class MainClass(Tk):
 
         self.show_frame("LoginPage")
     def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
         frame = self.frames[page_name]
         frame.tkraise()
-
+#-------------------- 수업조회 페이지 --------------------
 class ReservationPage(Frame):
     
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         t = ['월', '화', '수', '목', '금', '토', '일']
         self.controller = controller
-        label = Label(self, text="This is Reservationpage")
-        label.pack(side="top", fill="x", pady=10)
+        fontText=tkinter.font.Font(size=20, weight="bold")
+        label1 = Label(self, text="수업 예약 페이지 입니다." + "\n" + "예약/ 취소 하시려는 수업을 클릭 해 주세요!", font = fontText)
+        label2 = Label (self, text= "(단, 취소는 하루 전 까지, 예약은 1주일 이내의 수업만 가능합니다.)" , fg = "red")
+        label1.pack(side="top", fill="x", pady=10)
+        label2.pack(side="top", fill="x")
+        
         
         conn = pymysql.connect(host = 'localhost', user = 'root', password = '1234' ,db = 'MMP')
         # Connection 으로부터 Cursor 생성
         curs = conn.cursor()
  
         # SQL문 실행
-        sql = "select * from class  where  ctime < now()  and ctime > date_add(now(),interval +7 day) "
+        sql = "select c.cnum , c.cname, c.ccontent, c.ctime, count(s.cnum) nowNum, c.cmax from mmp.class c left join mmp.sugan s  on c.cnum = s.cnum where ctime > sysdate() and ctime < date_add(now(), interval +7 day) group by c.cnum"
         curs.execute(sql)
  
         # 데이타 Fetch
@@ -56,31 +59,27 @@ class ReservationPage(Frame):
         conn.close()
 
         for i in range(0,len(rows)):
-            dt = datetime.now()
-            nowYear = dt.year
-            nowMonth = dt.month
-            nowDay = dt.day
-            nextDt = dt + timedelta(days = i)
-            newYear = nextDt.year
-            newMonth = nextDt.month
-            newDay = nextDt.day
-            newDate = t[nextDt.weekday()]
-            date = str(newYear) +" / "+ str(newMonth) + " / " + str(newDay) + " (" + newDate +")"
-            name = rows[i]
-            btn1 = Button(self, text = name)
-            btn1.pack()
+            name = rows[i][1]
+            content = rows[i][2]
+            date = rows[i][3].strftime('%Y년 %m월 %d일 - %H시 %M분')
+
+            nowNum = str(rows[i][4])
+            maxNum = str(rows[i][5])
+            strClass = "강좌 : " + name+ " 내용 : " + content + "\n" + "수업 시간 : " + date +"\n"+ "신청 현황  : " + nowNum + "/" + maxNum
+        
+            btn1 = Button(self, text = strClass, padx =10 ,pady = 15)
+            btn1.pack(padx  =10, pady =10)
 
         myPageBtn = Button(self, text="Go to the MyPage",
                            command=lambda: controller.show_frame("MyPage"))
-        reservationBtn = Button(self, text="Go to ReservationPage",
-                           command=lambda: controller.show_frame("ReservationPage"))
+
         ManagerBtn = Button(self, text="Go to ManagerPage",
                            command=self.mng)
         logoutBtn = Button(self, text = "Logout",
                           command=lambda: controller.show_frame("LoginPage"))
         
         myPageBtn.pack()
-        reservationBtn.pack()
+
         ManagerBtn.pack()
         logoutBtn.pack()
 
