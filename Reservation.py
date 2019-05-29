@@ -44,7 +44,7 @@ class ReservationPage(Frame):
         curs = conn.cursor()
  
         # SQL문 실행
-        sql = "select * from class"
+        sql = "select * from class  where  ctime < now()  and ctime > date_add(now(),interval +7 day) "
         curs.execute(sql)
  
         # 데이타 Fetch
@@ -55,7 +55,7 @@ class ReservationPage(Frame):
         # Connection 닫기
         conn.close()
 
-        for i in range(0,5):
+        for i in range(0,len(rows)):
             dt = datetime.now()
             nowYear = dt.year
             nowMonth = dt.month
@@ -83,6 +83,8 @@ class ReservationPage(Frame):
         reservationBtn.pack()
         ManagerBtn.pack()
         logoutBtn.pack()
+
+    
 #---------------------------------------------------------
 
 #-------------------- 관리자 페이지 --------------------
