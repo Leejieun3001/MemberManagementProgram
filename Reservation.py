@@ -6,13 +6,15 @@ import threading
 from tkinter import messagebox
 import pymysql
 import tkinter.font
+from functools import partial
 
 MNGTITLE="관리자 페이지"
 
 #-------------------- 메인 --------------------
 class MainClass(Tk):
     def __init__(self):
-        Tk.__init__(self)
+        
+        Tk.__init__(self)        
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -28,47 +30,65 @@ class MainClass(Tk):
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
+        
 #-------------------- 수업조회 페이지 --------------------
 class ReservationPage(Frame):
     
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        t = ['월', '화', '수', '목', '금', '토', '일']
         self.controller = controller
-        fontText=tkinter.font.Font(size=20, weight="bold")
+        fontText=tkinter.font.Font(size=15, weight="bold")
         label1 = Label(self, text="수업 예약 페이지 입니다." + "\n" + "예약/ 취소 하시려는 수업을 클릭 해 주세요!", font = fontText)
         label2 = Label (self, text= "(단, 취소는 하루 전 까지, 예약은 1주일 이내의 수업만 가능합니다.)" , fg = "red")
-        label1.pack(side="top", fill="x", pady=10)
-        label2.pack(side="top", fill="x")
+        label1.grid(row=0 , column = 0,pady =10, padx =10)
+        label2.grid(row=1 ,column = 0 ,pady =10, padx =10)
         
-        
+        #db 연결
         conn = pymysql.connect(host = 'localhost', user = 'root', password = '1234' ,db = 'MMP')
         # Connection 으로부터 Cursor 생성
         curs = conn.cursor()
- 
         # SQL문 실행
         sql = "select c.cnum , c.cname, c.ccontent, c.ctime, count(s.cnum) nowNum, c.cmax from mmp.class c left join mmp.sugan s  on c.cnum = s.cnum where ctime > sysdate() and ctime < date_add(now(), interval +7 day) group by c.cnum"
         curs.execute(sql)
- 
         # 데이타 Fetch
-        rows = curs.fetchall()
-        print(rows)     # 전체 rows
-        # print(rows[0])  # 첫번째 row: (1, '김정수', 1, '서울')
-        # print(rows[1])  # 두번째 row: (2, '강수정', 2, '서울')
+        self.rows = StringVar()
+        self.rows = curs.fetchall()
         # Connection 닫기
         conn.close()
 
-        for i in range(0,len(rows)):
-            name = rows[i][1]
-            content = rows[i][2]
-            date = rows[i][3].strftime('%Y년 %m월 %d일 - %H시 %M분')
+        self.cnum = {}
+        self.date = {}
+        self.name = {}
+        button_identities  =[]
+        self.btn ={}
+        self.timeLabel = {}
+        self.classFrame  = {}
+        self.numberLabel ={}
+        for i in range(0,len(self.rows)):
+            index = i
+            self.cnum[i] = self.rows[i][0]
+            self.name[i] = self.rows[i][1]
+            content = self.rows[i][2]
+            self.date[i] = self.rows[i][3].strftime('%Y년 %m월 %d일 \n %H시 %M분')
+            nowNum = str(self.rows[i][4])
+            maxNum = str(self.rows[i][5])
+            strTime =  "수업 시간: \n " + self.date[i] 
+            strClass = "강좌 : " + self.name[i]+ "\n 내용 : " + content
+            strNum =  "신청 현황  \n" + nowNum + "/" + maxNum
+            if int(nowNum) == 6  :
+               strColor = "red"
+            else:
+                strColor = "blue"
 
-            nowNum = str(rows[i][4])
-            maxNum = str(rows[i][5])
-            strClass = "강좌 : " + name+ " 내용 : " + content + "\n" + "수업 시간 : " + date +"\n"+ "신청 현황  : " + nowNum + "/" + maxNum
+            self.classFrame[i] = Frame(self, relief="solid")
+            self.classFrame[i].grid(row = i+2, column= 0, pady =10)
+            self.timeLabel[i] = Label ( self.classFrame[i], text = strTime)
+            self.timeLabel[i].grid(row=0, column=0)
+            self.numberLabel[i] = Label ( self.classFrame[i], text = strNum, fg = strColor)
+            self.numberLabel[i].grid(row=0, column=2)
+            self.btn [i] = Button( self.classFrame[i], text = strClass, padx =10 ,pady = 15 , command = partial(self.applyCancleCalss, i))
+            self.btn [i].grid(row=0, column=1)
         
-            btn1 = Button(self, text = strClass, padx =10 ,pady = 15)
-            btn1.pack(padx  =10, pady =10)
 
         myPageBtn = Button(self, text="Go to the MyPage",
                            command=lambda: controller.show_frame("MyPage"))
@@ -78,11 +98,70 @@ class ReservationPage(Frame):
         logoutBtn = Button(self, text = "Logout",
                           command=lambda: controller.show_frame("LoginPage"))
         
-        myPageBtn.pack()
+        myPageBtn.grid(row = 3 + len(self.rows), column =0)
+        ManagerBtn.grid(row = 4+ len(self.rows), column =0)
+        logoutBtn.grid(row = 5 + len(self.rows), column =0)
 
-        ManagerBtn.pack()
-        logoutBtn.pack()
-
+    def applyCancleCalss(self, n):
+     
+        #우선 사용자를 1로 가정
+        userNum = str(1)
+        classNum = str(self.cnum[n])
+        #db 연결
+        conn = pymysql.connect(host = 'localhost', user = 'root', password = '1234' ,db = 'MMP')
+        # Connection 으로부터 Cursor 생성
+        curs = conn.cursor()
+        # SQL문 실행
+        sql = "SELECT * FROM mmp.sugan where mnum = "+ userNum +" and cnum ="+classNum+";"
+        curs.execute(sql)
+        # 데이타 Fetch
+        rows = curs.fetchall()
+        if len(rows) :
+            print("이미 예약함")
+            print(rows)
+            strInfo = self.name[n] + "를 취소하시겠습니까? \n" + "시간 : " + self.date[n]
+            isCancel =  messagebox.askokcancel("취소 창", strInfo)
+            if isCancel:
+                sql = "delete from mmp.sugan where mnum = "+ userNum+ " and cnum = " + classNum + ";"
+                curs.execute(sql)
+                conn.commit()
+                self.refresh()
+                self.controller.show_frame("ReservationPage")
+      
+        else :
+            print("예약가능")
+            strInfo = self.name[n] + "를 예약하시겠습니까? \n" + "시간 : " + self.date[n]
+            isReserve = messagebox.askokcancel("예약 창", strInfo)
+            print(isReserve)
+            if isReserve:
+                sql = "insert into mmp.sugan  (mnum, cnum) values ("+userNum +","+ classNum +");"
+                curs.execute(sql)
+                conn.commit()
+                self.refresh()
+                self.controller.show_frame("ReservationPage")
+      
+        # Connection 닫기
+        conn.close()
+        
+    def refresh(self):
+        conn = pymysql.connect(host = 'localhost', user = 'root', password = '1234' ,db = 'MMP')
+        curs = conn.cursor()
+        # SQL문 실행
+        sql = "select c.cnum , c.cname, c.ccontent, c.ctime, count(s.cnum) nowNum, c.cmax from mmp.class c left join mmp.sugan s  on c.cnum = s.cnum where ctime > sysdate() and ctime < date_add(now(), interval +7 day) group by c.cnum"
+        curs.execute(sql)
+        # 데이타 Fetch
+        self.rows = curs.fetchall()
+        print(self.rows)
+        for i in range(0,len(self.rows)):
+            nowNum = str(self.rows[i][4])
+            maxNum = str(self.rows[i][5])
+            strNum =  "신청 현황  \n" + nowNum + "/" + maxNum
+            if int(nowNum) == 6  :
+               strColor = "red"
+            else:
+                strColor = "blue"
+            self.numberLabel[i].configure(text = strNum, fg = strColor) 
+        conn.close()      
     
 #---------------------------------------------------------
 
