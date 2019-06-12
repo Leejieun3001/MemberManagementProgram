@@ -179,10 +179,11 @@ class ReservationPage(Frame):
     def isMyClass(self, mnum, cnum):
         conn = pymysql.connect(host = 'localhost', user = 'root', password = '0000' ,db = 'MMP')
         curs = conn.cursor()
-        sql ="select c.cnum from mmp.class c, mmp.sugan s where c.cnum = s.cnum and c.cnum = "+str(cnum)+" and s.mnum = "+str(mnum)+" and ctime > sysdate() and ctime < date_add(now(), interval +7 day)"
+        sql ="select c.cnum from class c, sugan s where c.cnum = s.cnum and c.cnum = "+str(cnum)+" and s.mnum = "+str(mnum)+" and ctime > sysdate() and ctime < date_add(now(), interval +7 day)"
         curs.execute(sql)
         rows = curs.fetchall()
         conn.close()
+        print(rows, "test", len(rows), "mnum", mnum, "cnum", cnum)
         if len(rows) == 0:
             return False
         else:
@@ -524,9 +525,7 @@ class LoginPage(Tk):
             if (self.name.get() == self.rows[i][2]):
                 self.temp_mnum = self.rows[i][0]
                 print("temp_mnum", self.temp_mnum)
-                #app = MainClass(self.temp_mnum)
                 self.destroy()
-                #app.mainloop()
                 MainClass(self.temp_mnum).mainloop()
                 break;
             elif (len(self.rows) - 1 == i):
