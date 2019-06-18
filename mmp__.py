@@ -43,8 +43,8 @@ class MainClass(Tk):
         self.destroy()
         LoginPage()
 
-#-------------------------------------------------------------#       
-#-------------------- 수업조회 및 예약  페이지 --------------------#
+#--------------------------------------------------------------#       
+#-------------------- 수업조회 및 예약  페이지 ---------------------#
 #-------------------------------------------------------------# 
 class ReservationPage(Frame):
     
@@ -60,20 +60,22 @@ class ReservationPage(Frame):
         mb.add_command(label="관리자페이지", command=lambda: self.controller.show_frame("ManagerLoginPage"))
         self.controller.config(menu=mb)
                 
-        
+
         #제목 label 설정
         fontText=tkinter.font.Font(size=15, weight="bold")
         label1 = Label(self, text="수업 예약 페이지 입니다." + "\n" + "예약/ 취소 하시려는 수업을 클릭 해 주세요!", font = fontText)
         label2 = Label (self, text= "(단, 취소는 하루 전 까지, 예약은 1주일 이내의 수업만 가능합니다.)" , fg = "red")
+        label3 = Label (self, text= "예약 가능한 수업 : 초록 / 이미  예악한 수업 : 하양 / 정원 초과 수업 : 빨강" ) 
         label1.grid(row=0 , column = 0,pady =10, padx =10)
         label2.grid(row=1 ,column = 0 ,pady =10, padx =10)
-        self.userNum = self.controller.mnum #임시로 **추후변경**
+        label3.grid(row =2, column = 0)
+        self.userNum = self.controller.mnum 
 
         #db 연결
         conn = sqlite3.connect("mmp.db")
         # Connection 으로부터 Cursor 생성
         curs = conn.cursor()
-        # SQL문 실행 - 오늘로부터 7일 이내의 수업 조회
+        # SQL문 실행 - 오늘로부터 예약 가능한 7일 이내의 수업 조회
         sql = "select c.cnum , c.cname, c.ccontent, c.ctime, count(s.cnum) nowNum, c.cmax from class c left join sugan s  on c.cnum = s.cnum where CAST(strftime('%s', c.ctime) AS integer ) > CAST(strftime('%s', datetime('now','localtime')) AS integer ) and CAST(strftime('%s', c.ctime) AS integer ) < CAST(strftime('%s', datetime('now','localtime','+7 day')) AS integer )  group by c.cnum"
         curs.execute(sql)
         # 데이타 Fetch
@@ -109,13 +111,13 @@ class ReservationPage(Frame):
                 btnColor = "white"
             else:
                 btnColor = "green"
-            if int(self.nowNum[i]) == 6  :
+            if int(self.nowNum[i]) == maxNum  :
                strColor = "red"
             else:
                 strColor = "blue" 
             #각 수업에 대한 Button, Label들 정의
             self.classFrame[i] = Frame(self, relief="solid")
-            self.classFrame[i].grid(row = i+2, column= 0, pady =10)
+            self.classFrame[i].grid(row = i+3, column= 0, pady =10)
             self.timeLabel[i] = Label ( self.classFrame[i], text = strTime)
             self.timeLabel[i].grid(row=0, column=0)
             self.numberLabel[i] = Label ( self.classFrame[i], text = strNum, fg = strColor)
@@ -126,9 +128,7 @@ class ReservationPage(Frame):
         
         logoutBtn = Button(self, text = "로그아웃 하기",
                           command=controller.destroy_frame)
-        logoutBtn.grid(row = 5 + len(self.rows), column =0)
-
-
+        logoutBtn.grid(row = 6 + len(self.rows), column =0)
 
     #수업 예약, 취소 함
     def applyCancel(self, n):
@@ -150,7 +150,6 @@ class ReservationPage(Frame):
                 conn.commit()
                 self.refresh()
                 self.controller.show_frame("ReservationPage")
-      
         #새로 예약하는 경우 
         else :
             #정원 체크
@@ -158,7 +157,12 @@ class ReservationPage(Frame):
             curs.execute(sql)
             row = curs.fetchone()
             now = row[0]
-            if int(now)==6:
+            sql ="select cmax from class where cnum = "+ classNum
+            curs.execute(sql)
+            row = curs.fetchone()
+            maxNum = row[0]          
+
+            if int(now)==int(maxNum): #정원이 초과한 경우 예약 불가능
                 messagebox.showinfo("정원 초과", "정원이 초과했습니다. 다른 수업을 이용해 주시면 감사하겠습니다.")
                 return
             strInfo = self.name[n] + "를 예약하시겠습니까? \n" + "시간 : " + self.date[n]
@@ -211,8 +215,6 @@ class ReservationPage(Frame):
             self.numberLabel[i].configure(text = strNum, fg = strColor)
             self.btn[i].configure(bg = btnColor)
         conn.close()      
-
-    
 #---------------------------------------------------------
 
 #-------------------- 관리자 페이지 --------------------
@@ -551,7 +553,6 @@ class LoginPage(Tk):
  
         # 데이타 Fetch
         self.rows = curs.fetchall()
-        print(self.rows)                ##### 테스트용
 
         # Connection 닫기
         conn.close()
