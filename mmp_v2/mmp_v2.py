@@ -131,7 +131,8 @@ class ReservationPage(Frame):
                 self.refresh()
                 self.controller.show_frame("ReservationPage")
       
-        # Connection 닫기
+        #Cursor, Connection 닫기
+        curs.close()
         conn.close()
         
     #내가 신청한 수업인지 아닌지 체크  
@@ -171,6 +172,7 @@ class ReservationPage(Frame):
             #configure 이용해서 Button, Label 상태 update    
             self.numberLabel[i].configure(text = strNum, fg = strColor)
             self.btn[i].configure(bg = btnColor)
+        curs.close()
         conn.close()
 
         #update : 수업목록 업데이트
