@@ -22,7 +22,7 @@ class MainClass(Tk):
         Tk.__init__(self, *args, **kwargs)
         
         self.title("MMP")
-        self.geometry("500x500")
+        self.geometry("900x900")
         
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -164,7 +164,7 @@ class ReservationPage(Frame):
                 btnColor = "white"
             else:
                 btnColor = "green"
-            if int(nowNum) == 6  :
+            if str(nowNum) == maxNum  :
                strColor = "red"
             else:
                 strColor = "blue"
@@ -221,7 +221,7 @@ class ReservationPage(Frame):
                     btnColor = "white"
                 else:
                     btnColor = "green"
-                if int(self.nowNum[i]) == 6  :
+                if str(self.nowNum[i]) == maxNum  :
                    strColor = "red"
                 else:
                     strColor = "blue" 
