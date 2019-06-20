@@ -74,7 +74,7 @@ class ReservationPage(Frame):
         #제목 label 설정
         fontText=tkinter.font.Font(size=15, weight="bold")
         label1 = Label(self, text="수업 예약 페이지 입니다." + "\n" + "예약/ 취소 하시려는 수업을 클릭 해 주세요!", font = fontText)
-        label2 = Label (self, text= "(단, 취소는 하루 전 까지, 예약은 1주일 이내의 수업만 가능합니다.)" , fg = "red")
+        label2 = Label (self, text= "(단, 예약은 1주일 이내의 수업만 가능합니다.)" , fg = "red")
         label3 = Label (self, text= "예약 가능한 수업 : 초록 / 이미  예악한 수업 : 하양 / 정원 초과 수업 : 빨강" ) 
         label1.grid(row=0 , column = 0,pady =10, padx =10)
         label2.grid(row=1 ,column = 0 ,pady =10, padx =10)
