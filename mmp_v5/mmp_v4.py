@@ -580,7 +580,7 @@ class MyPage(Frame):
                 text3 = "신청 현황: " + str(nowNum) + "/" + str(max)
                 
                 self.label[i] = Label(self.classes[self.i], text=text1, font=font2, fg=strColor)
-                self.label[i].grid(row=i, column=0, padx=25, pady=10)
+                self.label[i].grid(row=i, column=0, padx=20, pady=10)
                 Label(self.classes[self.i], text=text2, font=font2, fg=strColor).grid(row=i, column=1, padx=20, pady=10)
                 Label(self.classes[self.i], text=text3, font=font2, fg=strColor).grid(row=i, column=2, padx=20, pady=10)
             
@@ -629,10 +629,10 @@ class LoginPage(Tk):
 
 
         #이미지
-        photo = PhotoImage(file = "./health.PNG")
-        w = Label(self, image = photo)
-        w.photo = photo
-        w.grid(row=0)
+        #photo = PhotoImage(file = "./health.PNG")
+        #w = Label(self, image = photo)
+        #w.photo = photo
+        #w.grid(row=0)
          
         # 회원번호 입력 Entry
         logID = Entry(self, textvariable=self.name)
