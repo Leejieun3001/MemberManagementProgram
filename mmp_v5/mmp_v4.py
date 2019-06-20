@@ -625,16 +625,23 @@ class LoginPage(Tk):
         self.name = StringVar()
 
         # 회원번호를 입력해 달라는 Label
-        Label(self, text="회원번호를 입력해주세요.").grid(row=0, padx=10, pady=10)
- 
+        Label(self, text="회원번호를 입력해주세요.").grid(row=1, padx=10, pady=10)
+
+
+        #이미지
+        photo = PhotoImage(file = "./health.PNG")
+        w = Label(self, image = photo)
+        w.photo = photo
+        w.grid(row=0)
+         
         # 회원번호 입력 Entry
         logID = Entry(self, textvariable=self.name)
         logID.bind("<Return>", self.login)   # 엔터 키
-        logID.grid(row=1, padx=10, pady=10)
+        logID.grid(row=2, padx=10, pady=10)
             
         # 로그인 Button
         btnLogin = Button(self, text="로그인", command=self.login)
-        btnLogin.grid(row=2, padx=10, pady=10)
+        btnLogin.grid(row=3, padx=10, pady=10)
 
 
     # 회원번호가 db에 있는지 확인
